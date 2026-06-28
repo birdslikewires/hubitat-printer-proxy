@@ -21,7 +21,7 @@ print client
 3. **Proxy retries the printer connection** until the printer is online (up to ~30 seconds).
 4. **TCP stream is forwarded transparently** in both directions — the print client sees a normal JetDirect connection.
 5. **After the job completes**, the proxy walks the printer's SNMP and caches supply/status data to disk.
-6. **Power-off** is handled by a Hubitat automation watching the plug's wattage — when it drops to idle, the plug turns off.
+6. **Power-off** is handled by a Hubitat automation watching the plug's wattage — when it drops to idle, the plug turns off after a twenty-minute timeout. You'll need to configure this automation yourself on Hubitat.
 
 When the printer is off, `snmp-responder.py` serves the cached SNMP data back to the client via `snmpd pass_persist`, so the print queue shows ink levels and a plausible status rather than an error.
 
