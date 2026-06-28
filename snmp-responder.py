@@ -16,42 +16,37 @@ import sys
 import json
 from pathlib import Path
 
+# Must match SNMP_CACHE in printer-proxy.py
 SNMP_CACHE	= Path("/opt/printer-proxy/snmp-cache.json")
 
 
-def load_cache() -> dict:
+def oid_to_tuple(oid: str) -> tuple:
+	return tuple(int(x) for x in oid.strip().lstrip(".").split("."))
+
+
+def load_cache() -> tuple[dict, list]:
 	try:
-		return json.loads(SNMP_CACHE.read_text())
+		raw = json.loads(SNMP_CACHE.read_text())
+		cache = {}
+		for k, v in raw.items():
+			try:
+				oid_to_tuple(k)
+				cache[k] = v
+			except (ValueError, AttributeError):
+				pass
+		return cache, sorted(cache.keys(), key=oid_to_tuple)
 	except Exception:
-		return {}
+		return {}, []
 
 
 def parse_value(raw: str) -> tuple[str, str]:
-	"""
-	Parse snmpwalk value string into (snmp_type, value).
-	e.g. 'INTEGER: 800' → ('integer', '800')
-	     'STRING: "Cyan Cartridge"' → ('string', 'Cyan Cartridge')
-	"""
 	if ": " not in raw:
 		return ("string", raw)
 	type_part, val_part = raw.split(": ", 1)
 	snmp_type = type_part.strip().lower()
 	value = val_part.strip().strip('"')
-
-	type_map = {
-		"integer":	"integer",
-		"string":	"string",
-		"gauge32":	"gauge32",
-		"counter32":	"counter32",
-		"timeticks":	"timeticks",
-		"oid":		"objid",
-		"hex-string":	"string",
-	}
-	return (type_map.get(snmp_type, "string"), value)
-
-
-def oid_to_tuple(oid: str) -> tuple:
-	return tuple(int(x) for x in oid.strip().lstrip(".").split("."))
+	type_map = {"oid": "objid", "hex-string": "string"}
+	return (type_map.get(snmp_type, snmp_type), value)
 
 
 def write_triplet(oid: str, raw: str) -> None:
@@ -66,6 +61,8 @@ def none() -> None:
 
 
 def main() -> None:
+	cache, sorted_oids = load_cache()
+
 	while True:
 		line = sys.stdin.readline()
 		if not line:
@@ -73,6 +70,7 @@ def main() -> None:
 		cmd = line.strip()
 
 		if cmd == "PING":
+			cache, sorted_oids = load_cache()
 			sys.stdout.write("PONG\n")
 			sys.stdout.flush()
 			continue
@@ -83,9 +81,6 @@ def main() -> None:
 				none()
 				continue
 
-			cache = load_cache()
-			sorted_oids = sorted(cache.keys(), key=oid_to_tuple)
-
 			if cmd == "get":
 				if oid in cache:
 					write_triplet(oid, cache[oid])
@@ -93,12 +88,12 @@ def main() -> None:
 					none()
 
 			elif cmd == "getnext":
-				req = oid_to_tuple(oid)
-				next_oid = None
-				for o in sorted_oids:
-					if oid_to_tuple(o) > req:
-						next_oid = o
-						break
+				try:
+					req = oid_to_tuple(oid)
+				except ValueError:
+					none()
+					continue
+				next_oid = next((o for o in sorted_oids if oid_to_tuple(o) > req), None)
 				if next_oid:
 					write_triplet(next_oid, cache[next_oid])
 				else:

@@ -35,15 +35,8 @@ HUBITAT_TOKEN	= "TOKEN_GOES_HERE"
 HUBITAT_DEVICE	= "224"
 
 SNMP_COMMUNITY	= "public"
+# Must match SNMP_CACHE in snmp-responder.py
 SNMP_CACHE	= Path("/opt/printer-proxy/snmp-cache.json")
-
-# OID subtrees to cache from the printer
-SNMP_OIDS = [
-	"1.3.6.1.2.1.43.5.1.1",		# printer general info
-	"1.3.6.1.2.1.43.7.1.1",		# input trays
-	"1.3.6.1.2.1.43.11.1.1",	# supply levels
-	"1.3.6.1.2.1.43.12.1.1",	# media
-]
 
 BUFFER_SIZE	= 4096
 # --- End Configuration ---
@@ -73,26 +66,24 @@ def snmp_cache() -> None:
 	"""Query the printer's SNMP and cache results to disk."""
 	log.info("Caching SNMP data from printer...")
 	cache = {}
-	for oid in SNMP_OIDS:
-		try:
-			result = subprocess.run(
-				["snmpwalk", "-v1", "-c", SNMP_COMMUNITY, PRINTER_HOST, oid],
-				capture_output=True, text=True, timeout=10
-			)
-			for line in result.stdout.strip().splitlines():
-				# Parse: iso.x.y.z = TYPE: value
-				if " = " not in line:
-					continue
-				oid_part, value_part = line.split(" = ", 1)
-				# Normalise OID: replace leading 'iso' with '1'
-				oid_norm = oid_part.strip().replace("iso", "1")
-				cache[oid_norm] = value_part.strip()
-		except Exception as e:
-			log.error(f"SNMP walk failed for {oid}: {e}")
+	try:
+		result = subprocess.run(
+			["snmpwalk", "-On", "-v1", "-c", SNMP_COMMUNITY, PRINTER_HOST, "1.3.6.1.2.1.43"],
+			capture_output=True, text=True, timeout=30
+		)
+		for line in result.stdout.strip().splitlines():
+			if " = " not in line:
+				continue
+			oid_part, value_part = line.split(" = ", 1)
+			cache[oid_part.strip().lstrip(".")] = value_part.strip()
+	except Exception as e:
+		log.error(f"SNMP walk failed: {e}")
 
 	if cache:
 		try:
-			SNMP_CACHE.write_text(json.dumps(cache, indent=2))
+			tmp = SNMP_CACHE.with_suffix(".tmp")
+			tmp.write_text(json.dumps(cache, indent=2))
+			tmp.rename(SNMP_CACHE)
 			log.info(f"SNMP cache written ({len(cache)} OIDs)")
 		except Exception as e:
 			log.error(f"Failed to write SNMP cache: {e}")
