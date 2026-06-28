@@ -2,7 +2,7 @@
 
 A lightweight TCP proxy that sits between your network and a printer on a smart plug controlled via the Hubitat Maker API, powering it on automatically when a print job arrives, and keeping the client happy about printer status by providing SNMP responses when it's off.
 
-## How it works
+## How It Works
 
 ```
 print client
