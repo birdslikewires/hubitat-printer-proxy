@@ -2,8 +2,8 @@
 """
 snmp-responder.py
 
-snmpd pass_persist script. Serves cached printer SNMP data to macOS
-when the printer is off. Called and managed by snmpd.
+snmpd pass_persist script. Serves cached printer SNMP data (Printer MIB,
+.1.3.6.1.2.1.43) when the printer is off. Called and managed by snmpd.
 
 pass_persist protocol (one OID per command):
   - snmpd sends "PING\n" → respond "PONG\n"
@@ -17,10 +17,6 @@ import json
 from pathlib import Path
 
 SNMP_CACHE	= Path("/opt/printer-proxy/snmp-cache.json")
-
-# hrPrinterDetectedErrorState — serve empty octet string (no errors)
-PRINTER_STATUS_OID	= "1.3.6.1.2.1.25.3.5.1.2.1"
-PRINTER_STATUS_NO_ERROR	= "STRING: "
 
 
 def load_cache() -> dict:
@@ -88,7 +84,6 @@ def main() -> None:
 				continue
 
 			cache = load_cache()
-			cache[PRINTER_STATUS_OID] = PRINTER_STATUS_NO_ERROR
 			sorted_oids = sorted(cache.keys(), key=oid_to_tuple)
 
 			if cmd == "get":

@@ -101,7 +101,6 @@ The responder caches and serves the following MIB subtrees from the printer:
 | `1.3.6.1.2.1.43.7.1.1` | Input trays |
 | `1.3.6.1.2.1.43.11.1.1` | Supply levels (ink/toner) |
 | `1.3.6.1.2.1.43.12.1.1` | Media types |
-| `1.3.6.1.2.1.25.3.5.1.2.1` | Printer status (served as "idle" when off) |
 
 ## Hubitat setup
 
