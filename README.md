@@ -56,18 +56,18 @@ HUBITAT_TOKEN  = "your-token"    # Maker API access token
 HUBITAT_DEVICE = "224"           # device ID of the smart plug
 ```
 
-### 2. Install the proxy
+### 2. Clone the repo
 
 ```bash
-sudo mkdir -p /usr/local/lib/printer-proxy /opt/printer-proxy
-sudo cp printer-proxy.py /usr/local/lib/printer-proxy/
-sudo cp snmp-responder.py /opt/printer-proxy/
+sudo git clone https://github.com/birdslikewires/hubitat-printer-proxy /opt/hubitat-printer-proxy
 ```
+
+To update later: `cd /opt/hubitat-printer-proxy && sudo git pull`
 
 ### 3. Install and start the systemd service
 
 ```bash
-sudo cp printer-proxy.service /etc/systemd/system/
+sudo cp /opt/hubitat-printer-proxy/printer-proxy.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now printer-proxy
 ```
@@ -75,7 +75,7 @@ sudo systemctl enable --now printer-proxy
 ### 4. Configure snmpd
 
 ```bash
-sudo cp printer-proxy-snmp.conf /etc/snmp/snmpd.conf.d/
+sudo cp /opt/hubitat-printer-proxy/printer-proxy-snmp.conf /etc/snmp/snmpd.conf.d/
 sudo systemctl restart snmpd
 ```
 

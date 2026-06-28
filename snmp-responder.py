@@ -17,7 +17,7 @@ import json
 from pathlib import Path
 
 # Must match SNMP_CACHE in printer-proxy.py
-SNMP_CACHE	= Path("/opt/printer-proxy/snmp-cache.json")
+SNMP_CACHE	= Path("/opt/hubitat-printer-proxy/snmp-cache.json")
 
 
 def oid_to_tuple(oid: str) -> tuple:

@@ -36,7 +36,7 @@ HUBITAT_DEVICE	= "224"
 
 SNMP_COMMUNITY	= "public"
 # Must match SNMP_CACHE in snmp-responder.py
-SNMP_CACHE	= Path("/opt/printer-proxy/snmp-cache.json")
+SNMP_CACHE	= Path("/opt/hubitat-printer-proxy/snmp-cache.json")
 
 BUFFER_SIZE	= 4096
 # --- End Configuration ---
