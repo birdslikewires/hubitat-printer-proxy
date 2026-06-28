@@ -18,9 +18,9 @@ from pathlib import Path
 
 SNMP_CACHE	= Path("/opt/printer-proxy/snmp-cache.json")
 
-# Printer status OID — serve a static "idle" when printer is off
+# hrPrinterDetectedErrorState — serve empty octet string (no errors)
 PRINTER_STATUS_OID	= "1.3.6.1.2.1.25.3.5.1.2.1"
-PRINTER_STATUS_IDLE	= "3"  # idle
+PRINTER_STATUS_NO_ERROR	= "STRING: "
 
 
 def load_cache() -> dict:
@@ -82,13 +82,13 @@ def main() -> None:
 			continue
 
 		if cmd in ("get", "getnext"):
-			oid = sys.stdin.readline().strip()
+			oid = sys.stdin.readline().strip().lstrip(".")
 			if not oid:
 				none()
 				continue
 
 			cache = load_cache()
-			cache[PRINTER_STATUS_OID] = f"INTEGER: {PRINTER_STATUS_IDLE}"
+			cache[PRINTER_STATUS_OID] = PRINTER_STATUS_NO_ERROR
 			sorted_oids = sorted(cache.keys(), key=oid_to_tuple)
 
 			if cmd == "get":
