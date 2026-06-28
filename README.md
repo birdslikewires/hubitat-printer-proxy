@@ -44,25 +44,22 @@ When the printer is off, `snmp-responder.py` serves the cached SNMP data back to
 
 ## Setup
 
-### 1. Configure the proxy
-
-Edit `printer-proxy.py` and set the values in the `# --- Configuration ---` block:
-
-```python
-PRINTER_HOST   = "192.168.x.x"   # printer's IP
-HUBITAT_HOST   = "192.168.x.x"   # Hubitat hub's IP
-HUBITAT_APP    = "101"            # Maker API app ID
-HUBITAT_TOKEN  = "your-token"    # Maker API access token
-HUBITAT_DEVICE = "224"           # device ID of the smart plug
-```
-
-### 2. Clone the repo
+### 1. Clone the repo
 
 ```bash
 sudo git clone https://github.com/birdslikewires/hubitat-printer-proxy /opt/hubitat-printer-proxy
 ```
 
 To update later: `cd /opt/hubitat-printer-proxy && sudo git pull`
+
+### 2. Configure
+
+```bash
+sudo cp /opt/hubitat-printer-proxy/printer-proxy.env.example /opt/hubitat-printer-proxy/printer-proxy.env
+sudo nano /opt/hubitat-printer-proxy/printer-proxy.env
+```
+
+Set your printer's IP, Hubitat hub IP, Maker API app ID, access token, and device ID.
 
 ### 3. Install and start the systemd service
 

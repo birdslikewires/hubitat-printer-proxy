@@ -12,6 +12,7 @@ supply/status data for serving via snmpd pass_persist (snmp-responder.py).
 Power-off is handled separately by a Hubitat automation watching wattage.
 """
 
+import os
 import socket
 import threading
 import urllib.request
@@ -22,24 +23,20 @@ import sys
 import time
 from pathlib import Path
 
-# --- Configuration ---
-LISTEN_HOST	= "0.0.0.0"
-LISTEN_PORT	= 9100
-
-PRINTER_HOST	= "192.168.11.102"
+LISTEN_HOST		= "0.0.0.0"
+LISTEN_PORT		= 9100
 PRINTER_PORT	= 9100
+BUFFER_SIZE		= 4096
 
-HUBITAT_HOST	= "192.168.11.22"
-HUBITAT_APP	= "101"
-HUBITAT_TOKEN	= "TOKEN_GOES_HERE"
-HUBITAT_DEVICE	= "224"
+PRINTER_HOST	= os.environ["PRINTER_HOST"]
+HUBITAT_HOST	= os.environ["HUBITAT_HOST"]
+HUBITAT_APP		= os.environ["HUBITAT_APP"]
+HUBITAT_TOKEN	= os.environ["HUBITAT_TOKEN"]
+HUBITAT_DEVICE	= os.environ["HUBITAT_DEVICE"]
 
 SNMP_COMMUNITY	= "public"
 # Must match SNMP_CACHE in snmp-responder.py
 SNMP_CACHE	= Path("/opt/hubitat-printer-proxy/snmp-cache.json")
-
-BUFFER_SIZE	= 4096
-# --- End Configuration ---
 
 logging.basicConfig(
 	level=logging.INFO,

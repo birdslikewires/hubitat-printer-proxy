@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+EnvironmentFile=/opt/hubitat-printer-proxy/printer-proxy.env
 ExecStart=/usr/bin/python3 /opt/hubitat-printer-proxy/printer-proxy.py
 Restart=always
 RestartSec=5

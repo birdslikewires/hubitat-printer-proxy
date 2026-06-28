@@ -1,3 +1,4 @@
 .DS_Store
+printer-proxy.env
 snmp-cache.json
 snmp-cache.tmp
