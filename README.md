@@ -1,6 +1,6 @@
 # hubitat-printer-proxy
 
-A lightweight TCP proxy that sits between your network and a printer on a smart plug controlled via the Hubitat Maker API, powering it on automatically when a print job arrives, and keeping the client happy about printer status by providing SNMP responses when it's off.
+Lightweight TCP proxy that sits between your client and a printer on a smart plug controlled via the Hubitat Maker API. The printer is powered on automatically when a print job arrives, and we keep the client happy about printer status by providing SNMP responses when the printer is powered off.
 
 ## How It Works
 
