@@ -48,9 +48,10 @@ When the printer is off, `snmp-responder.py` serves the cached SNMP data back to
 
 ```bash
 sudo git clone https://github.com/birdslikewires/hubitat-printer-proxy /opt/hubitat-printer-proxy
+sudo chown -R $USER:$USER /opt/hubitat-printer-proxy
 ```
 
-To update later: `cd /opt/hubitat-printer-proxy && sudo git pull`
+To update later: `cd /opt/hubitat-printer-proxy && git pull`
 
 ### 2. Configure
 
@@ -59,7 +60,11 @@ sudo cp /opt/hubitat-printer-proxy/printer-proxy.env.example /opt/hubitat-printe
 sudo nano /opt/hubitat-printer-proxy/printer-proxy.env
 ```
 
-Set your printer's IP, Hubitat hub IP, Maker API app ID, access token, and device ID.
+Set your printer's IP, Hubitat hub IP, Maker API app ID, access token, and device ID. Restrict permissions to keep the token private:
+
+```bash
+chmod 600 /opt/hubitat-printer-proxy/printer-proxy.env
+```
 
 ### 3. Install and start the systemd service
 
