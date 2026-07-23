@@ -2,6 +2,8 @@
 
 Lightweight TCP proxy that sits between your client and a printer on a smart plug controlled via the Hubitat Maker API. The printer is powered on automatically when a print job arrives, and we keep the client happy about printer status by providing SNMP responses when the printer is powered off.
 
+Optionally, a CUPS queue on the same host (using the [biosed/dell-1320c-cups-driver](https://github.com/biosed/dell-1320c-cups-driver) native filter chain) can render PostScript/PDF to the printer's HBPL language locally, so clients no longer need the Dell driver installed themselves — see [Optional: render on the proxy host](#optional-render-on-the-proxy-host-instead-of-the-client).
+
 ## How It Works
 
 ```
@@ -25,6 +27,8 @@ print client
 
 When the printer is off, `snmp-responder.py` serves the cached SNMP data back to the client via `snmpd pass_persist`, so the print queue shows ink levels and a plausible status rather than an error.
 
+The proxy itself never inspects or renders the print data — the bytes it forwards on port 9100 are already in the printer's native language. Normally that rendering happens on the client (e.g. macOS's own Dell driver). The optional CUPS setup below moves that rendering step onto the proxy host instead, ahead of `printer-proxy.py`'s listener.
+
 ## Components
 
 | File | Purpose |
@@ -33,6 +37,7 @@ When the printer is off, `snmp-responder.py` serves the cached SNMP data back to
 | `snmp-responder.py` | `snmpd pass_persist` script serving cached printer MIB data |
 | `printer-proxy.service` | systemd unit for the proxy (runs on a Linux host) |
 | `printer-proxy-snmp.conf` | Drop-in snmpd config to wire up the pass_persist handler |
+| `setup-cups-driver.sh` | Optional: installs CUPS + the Dell 1320c native filter chain, pointed at the proxy's own listener |
 
 ## Requirements
 
@@ -92,6 +97,34 @@ agentaddress 127.0.0.1,[::1],192.168.x.x
 ### 5. Point client at the proxy
 
 For macOS, in **System Settings → Printers & Scanners**, add the printer using the proxy host's IP address and **HP Jetdirect – Socket** protocol on port 9100. Select your printer's PPD/driver as normal.
+
+This requires the Dell driver to be installed on every client. See below for an alternative that renders on the proxy host instead.
+
+## Optional: render on the proxy host instead of the client
+
+By default, whatever's connecting to port 9100 is responsible for rendering PostScript/PDF into the printer's native language (HBPL) before it ever reaches the proxy — normally that's a Dell driver installed on the client. `setup-cups-driver.sh` moves that rendering step onto the proxy host itself, using the clean-room [biosed/dell-1320c-cups-driver](https://github.com/biosed/dell-1320c-cups-driver) filter chain (precompiled aarch64 binary), so clients just need a generic PostScript driver.
+
+```
+print client  ──IPP──►  CUPS (proxy host)  ──renders PS → HBPL──►  socket://127.0.0.1:9100
+                                                                          │
+                                                                    printer-proxy.py
+                                                                  (power on, forward)
+                                                                          │
+                                                                          ▼
+                                                                       Printer
+```
+
+`printer-proxy.py` doesn't change — it still just receives already-rendered bytes on 9100, powers the plug, and forwards. CUPS is simply a new client of the proxy, running locally.
+
+```bash
+sudo ./setup-cups-driver.sh
+```
+
+This installs `cups`, `ghostscript`, and `avahi-daemon`, downloads the driver tarball, installs the filters to `/opt/Dell1320/filter` and the PPD to `/usr/share/ppd/Dell/Dell-1320c.ppd`, and creates a shared CUPS queue (`Dell1320c` by default) with device URI `socket://127.0.0.1:9100` — i.e. back at the proxy's own listener.
+
+Override `DRIVER_VERSION`, `QUEUE_NAME`, or `PROXY_PORT` as environment variables if needed.
+
+Point clients at `ipp://<proxy-host-ip>/printers/Dell1320c` using a generic PostScript driver instead of the Dell driver — or, since the queue is shared and `avahi-daemon` is running, it should also show up automatically as an AirPrint printer to iOS/macOS clients on the same LAN.
 
 ## SNMP data served
 
